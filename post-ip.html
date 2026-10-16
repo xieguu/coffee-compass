@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用于测试 IP · 咖啡笔记</title>
+  <meta name="description" content="直接在博客内查看公网 IPv4、IPv6、IP 归属地和不同网站的网络出口。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="modulepreload" href="ip-check.js" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home">首页</a>
+      <a href="posts.html" data-section="posts" class="active" aria-current="page">文章</a>
+      <a href="post-useful-websites.html" data-section="websites">网页推荐</a>
+      <a href="about.html" data-section="about">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+  <main id="main-content" class="article" data-section="posts" data-description="直接在博客内查看公网 IPv4、IPv6、IP 归属地和不同网站的网络出口。" tabindex="-1">
+    <p class="eyebrow">2026-10-06</p>
+    <h1>用于测试 IP</h1>
+    <p>
+      在这里查看当前浏览器的公网 IP、归属地，以及访问不同网站时使用的出口。
+    </p>
+
+    <section class="ip-tool" aria-labelledby="ip-tool-heading">
+      <div class="ip-tool-header">
+        <div>
+          <h2 id="ip-tool-heading">当前网络</h2>
+          <p id="ip-status" class="ip-status" role="status" aria-live="polite">正在准备检测…</p>
+        </div>
+        <button id="ip-refresh" class="btn primary" type="button" disabled>重新检测</button>
+      </div>
+
+      <progress id="ip-progress" class="ip-progress" value="0" max="6" aria-label="IP 检测进度"></progress>
+
+      <noscript><p class="ip-notice">请启用 JavaScript，才能在本页运行 IP 检测。</p></noscript>
+
+      <div class="ip-summary">
+        <section id="ipv4-panel" class="ip-panel" data-state="loading" aria-labelledby="ipv4-heading">
+          <h3 id="ipv4-heading">公网 IPv4</h3>
+          <p class="ip-value">检测中…</p>
+          <p class="ip-detail">正在读取 IPv4 出口。</p>
+        </section>
+        <section id="ipv6-panel" class="ip-panel" data-state="loading" aria-labelledby="ipv6-heading">
+          <h3 id="ipv6-heading">公网 IPv6</h3>
+          <p class="ip-value">检测中…</p>
+          <p class="ip-detail">正在读取 IPv6 出口。</p>
+        </section>
+        <section id="geo-panel" class="ip-panel" data-state="loading" aria-labelledby="geo-heading">
+          <h3 id="geo-heading">IPv4 归属地</h3>
+          <p class="ip-value ip-location">等待 IPv4…</p>
+          <p class="ip-detail">取得地址后查询地区和运营商。</p>
+        </section>
+      </div>
+
+      <h3 id="ip-routes-heading">网站出口</h3>
+      <p class="ip-route-intro">各站点会返回它看到的出口 IP，方便对照当前的网络分流。</p>
+      <div class="ip-table-scroll" role="region" aria-labelledby="ip-routes-heading" tabindex="0">
+        <table class="ip-route-table">
+          <caption class="visually-hidden">各站点的出口地址、国家或地区和 HTTP 请求耗时</caption>
+          <thead>
+            <tr>
+              <th scope="col">服务</th>
+              <th scope="col">出口 IP</th>
+              <th scope="col">国家或地区</th>
+              <th scope="col">检测结果</th>
+            </tr>
+          </thead>
+          <tbody id="ip-routes"></tbody>
+        </table>
+      </div>
+      <p id="ip-route-summary" class="ip-detail">正在对比网站出口…</p>
+      <p class="ip-source">数据由 ipify、IP.SB 和对应站点实时返回。出口差异也可能来自 IPv4 / IPv6 或网络路由。</p>
+    </section>
+
+    <p><a class="btn" href="posts.html">返回文章列表</a></p>
+  </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>

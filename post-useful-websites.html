@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>网页推荐导航 · 咖啡笔记</title>
+  <meta name="description" content="网页推荐导航：AI风月、Net.Coffee IP 查询与 Brain.fm。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home">首页</a>
+      <a href="posts.html" data-section="posts">文章</a>
+      <a href="post-useful-websites.html" data-section="websites" class="active" aria-current="page">网页推荐</a>
+      <a href="about.html" data-section="about">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+      <main id="main-content" class="website-directory" data-section="websites" data-description="网页推荐导航：AI风月、Net.Coffee IP 查询与 Brain.fm。" tabindex="-1">
+      <section class="page-head">
+        <p class="eyebrow">Website Directory</p>
+        <h1>网页推荐导航</h1>
+        <p class="lede">常用工具与值得逛的网站，选一个，直接在这里打开。</p>
+      </section>
+
+      <section class="website-browser" aria-labelledby="browser-heading">
+        <div class="browser-toolbar">
+          <h2 id="browser-heading">站内浏览</h2>
+          <a href="#website-list" hx-boost="false">选择网站 ↓</a>
+        </div>
+        <p class="browser-note" id="embed-note">默认显示 AI风月。点击下方卡片的“站内浏览”切换网站；若网站拒绝嵌入或登录不可用，可使用对应的“新窗口”入口。</p>
+        <iframe name="recommendation-frame" title="推荐网站浏览窗口" src="https://afengy.cash/zh?ref_id=1af0adb6-6191-4692-992d-64d184fdcfb6" aria-describedby="embed-note" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads" allow="fullscreen; autoplay" allowfullscreen></iframe>
+      </section>
+
+      <section id="website-list" class="cards website-list" aria-label="推荐网站">
+        <article class="card">
+          <span class="tag">AI 互动</span>
+          <h2>AI风月</h2>
+          <p>探索 AI 角色与互动对话。</p>
+          <span class="website-domain">afengy.cash</span>
+          <div class="website-actions" hx-boost="false">
+            <a class="btn primary" href="https://afengy.cash/zh?ref_id=1af0adb6-6191-4692-992d-64d184fdcfb6" target="recommendation-frame" aria-label="站内浏览 AI风月">站内浏览</a>
+            <a class="btn" href="https://afengy.cash/zh?ref_id=1af0adb6-6191-4692-992d-64d184fdcfb6" target="_blank" rel="noopener noreferrer" aria-label="新窗口打开 AI风月">新窗口 ↗</a>
+          </div>
+        </article>
+        <article class="card">
+          <span class="tag">网络工具</span>
+          <h2>Net.Coffee IP 查询</h2>
+          <p>查询当前 IP、地理位置与网站分流出口。</p>
+          <span class="website-domain">ip.net.coffee</span>
+          <div class="website-actions" hx-boost="false">
+            <span class="website-domain">该网站仅支持新窗口打开</span>
+            <a class="btn" href="https://ip.net.coffee/" target="_blank" rel="noopener noreferrer" aria-label="新窗口打开 Net.Coffee IP 查询">新窗口 ↗</a>
+          </div>
+        </article>
+        <article class="card">
+          <span class="tag">音乐与专注</span>
+          <h2>Brain.fm</h2>
+          <p>用于专注、放松与睡眠的音乐服务。</p>
+          <span class="website-domain">my.brain.fm</span>
+          <div class="website-actions" hx-boost="false">
+            <a class="btn primary" href="https://my.brain.fm/?extended_promo=365&amp;utm_source=lenny" target="recommendation-frame" aria-label="站内浏览 Brain.fm">站内浏览</a>
+            <a class="btn" href="https://my.brain.fm/?extended_promo=365&amp;utm_source=lenny" target="_blank" rel="noopener noreferrer" aria-label="新窗口打开 Brain.fm">新窗口 ↗</a>
+          </div>
+        </article>
+      </section>
+    </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>

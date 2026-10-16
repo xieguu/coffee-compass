@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>关于 · 咖啡笔记</title>
+  <meta name="description" content="关于咖啡笔记这个静态个人博客。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home">首页</a>
+      <a href="posts.html" data-section="posts">文章</a>
+      <a href="post-useful-websites.html" data-section="websites">网页推荐</a>
+      <a href="about.html" data-section="about" class="active" aria-current="page">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+  <main id="main-content" class="article" data-section="about" data-description="关于咖啡笔记这个静态个人博客。" tabindex="-1">
+    <p class="eyebrow">About</p>
+    <h1>关于</h1>
+    <p>这是一个静态个人博客，用来发一点短文。</p>
+  </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>

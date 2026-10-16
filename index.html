@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>咖啡笔记 · 个人博客</title>
+  <meta name="description" content="个人博客，记录一些日常笔记。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home" class="active" aria-current="page">首页</a>
+      <a href="posts.html" data-section="posts">文章</a>
+      <a href="post-useful-websites.html" data-section="websites">网页推荐</a>
+      <a href="about.html" data-section="about">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+  <main id="main-content" data-section="home" data-description="个人博客，记录一些日常笔记。" tabindex="-1">
+    <section class="hero">
+      <p class="eyebrow">Personal Blog</p>
+      <h1>咖啡笔记</h1>
+      <p class="lede">随手记下觉得有用的东西。</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="posts.html">阅读文章</a>
+        <a class="btn" href="about.html">关于</a>
+      </div>
+    </section>
+
+    <section class="cards">
+      <article class="card">
+        <span class="tag">最新 · 技术记录</span>
+        <h2><a href="post-htmx-lazy-loading.html">给静态博客做按需加载</a></h2>
+        <p>首页脚本减少约 44%，以及动态导入和快速切页背后的清理逻辑。</p>
+      </article>
+      <article class="card">
+        <span class="tag">网址推荐</span>
+        <h2><a href="post-useful-websites.html">网页推荐导航</a></h2>
+        <p>AI风月、Net.Coffee IP 查询与 Brain.fm，集中收藏，随时打开。</p>
+      </article>
+      <article class="card">
+        <span class="tag">网络工具</span>
+        <h2><a href="post-ip.html">用于测试 IP</a></h2>
+        <p>直接在文章内查看公网 IP、归属地和网站出口。</p>
+      </article>
+      <article class="card">
+        <span class="tag">关于</span>
+        <h2><a href="about.html">这个站点</a></h2>
+        <p>静态个人博客，打开就能读。</p>
+      </article>
+    </section>
+  </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>

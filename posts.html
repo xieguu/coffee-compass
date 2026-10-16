@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文章 · 咖啡笔记</title>
+  <meta name="description" content="咖啡笔记的文章列表。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home">首页</a>
+      <a href="posts.html" data-section="posts" class="active" aria-current="page">文章</a>
+      <a href="post-useful-websites.html" data-section="websites">网页推荐</a>
+      <a href="about.html" data-section="about">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+  <main id="main-content" data-section="posts" data-description="咖啡笔记的文章列表。" tabindex="-1">
+    <section class="page-head">
+      <p class="eyebrow">Writing</p>
+      <h1>文章</h1>
+      <p class="lede">技术记录、实用网站，以及一些随手记下的发现。</p>
+    </section>
+
+    <article class="post-list">
+      <a class="post-item" href="post-htmx-lazy-loading.html">
+        <time datetime="2026-10-09">2026-10-09</time>
+        <h2>给静态博客做按需加载</h2>
+        <p>记录一次 htmx 优化：拆分 IP 检测依赖，处理快速切页和请求清理，让首页脚本体积减少约 44%。</p>
+      </a>
+      <a class="post-item" href="post-useful-websites.html">
+        <time datetime="2026-10-09">2026-10-09</time>
+        <h2>网页推荐导航</h2>
+        <p>推荐 AI风月、Net.Coffee IP 查询与 Brain.fm，提供站内浏览或新窗口入口。</p>
+      </a>
+      <a class="post-item" href="post-ip.html">
+        <time datetime="2026-10-06">2026-10-06</time>
+        <h2>用于测试 IP</h2>
+        <p>在博客内查看当前 IP、归属地和各网站的网络出口。</p>
+      </a>
+    </article>
+  </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "ipaddr.js",
+  "version": "2.5.0",
+  "license": "MIT",
+  "source": "ipaddr.js",
+  "sourceSHA256": "52bcb70a2b313469c52a511ab405a4bd73599e36581d6075bbefdb2cfc4b80d8",
+  "module": "ipaddr.mjs",
+  "moduleSHA256": "79d9d1303a91735f0f55a4fae1caaac102c3e09f5b8cc661a346ee3db1fd43a0",
+  "generatedWith": {
+    "name": "esbuild",
+    "version": "0.28.2",
+    "command": "npx --yes esbuild@0.28.2 vendor/ipaddr.js/ipaddr.js --bundle --format=esm --minify --target=es2022 --outfile=vendor/ipaddr.js/ipaddr.mjs"
+  }
+}

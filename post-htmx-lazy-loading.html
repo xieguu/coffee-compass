@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>给静态博客做按需加载 · 咖啡笔记</title>
+  <meta name="description" content="记录这个博客的一次 htmx 优化：用动态 import 按需加载 IP 工具，通过版本检查与 AbortController 处理快速切页，让首页脚本体积减少约 44%。" />
+  <meta name="htmx-config" content='{"allowScriptTags":false,"includeIndicatorStyles":false,"historyRestoreAsHxRequest":false,"refreshOnHistoryMiss":false,"scrollIntoViewOnBoost":false,"timeout":10000}' />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/htmx/htmx.min.js" defer></script>
+  <script src="navigation.js" defer></script>
+</head>
+<body hx-boost="true" hx-target="#page-content" hx-select="#page-content > main" hx-swap="innerHTML" hx-sync="body:replace" hx-indicator="#navigation-progress">
+  <a class="skip-link" href="#main-content" hx-boost="false">跳到正文</a>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="logo" href="index.html">咖啡笔记</a>
+    <nav aria-label="主导航">
+      <a href="index.html" data-section="home">首页</a>
+      <a href="posts.html" data-section="posts" class="active" aria-current="page">文章</a>
+      <a href="post-useful-websites.html" data-section="websites">网页推荐</a>
+      <a href="about.html" data-section="about">关于</a>
+    </nav>
+    <div id="navigation-progress" class="navigation-progress" aria-hidden="true"></div>
+  </header>
+
+  <div id="site-content" class="site-content">
+    <div id="navigation-error" class="navigation-error" role="alert" hidden>
+      <p id="navigation-error-message"></p>
+      <button id="navigation-retry" class="btn" type="button" hx-push-url="true">重试</button>
+    </div>
+    <div id="page-content" hx-history-elt>
+      <main id="main-content" class="article reading-article technical-article" data-section="posts" data-description="记录这个博客的一次 htmx 优化：用动态 import 按需加载 IP 工具，通过版本检查与 AbortController 处理快速切页，让首页脚本体积减少约 44%。" tabindex="-1">
+        <header class="article-header">
+          <p class="eyebrow">技术记录</p>
+          <h1>给静态博客做按需加载</h1>
+          <p class="article-meta"><time datetime="2026-10-09">2026-10-09</time><span>咖啡笔记</span><span>JavaScript · htmx</span></p>
+          <p class="lede">首页脚本从 102.7 KB 降到 57.4 KB，以及快速切页时需要处理的两件事。</p>
+        </header>
+
+        <p>这次整理博客时，发现首页会一起加载 IP 检测代码和地址解析库，尽管首页根本没有检测工具。把这部分依赖推迟到进入文章时加载后，首页的项目脚本体积减少了约 44%。改动里更值得记下的，是另一个时序问题：模块还没加载好，读者已经离开了那篇文章。</p>
+        <p>下面以这个站点的实际实现为例，记录从依赖拆分到页面卸载的完整过程。代码对应 <code>navigation.js</code> 和 <code>ip-check.js</code>，使用 htmx 2.0.11。</p>
+
+        <section class="article-quicklinks" aria-labelledby="contents-heading" hx-boost="false">
+          <h2 id="contents-heading">这篇记录的四个步骤</h2>
+          <ol>
+            <li><a href="#script-budget">先看首页到底加载了什么</a></li>
+            <li><a href="#module-entry">把检测工具变成按需加载的模块</a></li>
+            <li><a href="#page-lifecycle">处理快速切页和请求清理</a></li>
+            <li><a href="#verification">把容易漏掉的时序写进验证</a></li>
+          </ol>
+        </section>
+
+        <section class="technical-section" aria-labelledby="script-budget">
+          <h2 id="script-budget">先看首页到底加载了什么</h2>
+          <p>改动前，每个页面都引用四个脚本：htmx、导航逻辑、IP 检测逻辑和 ipaddr.js。它们都加了 <code>defer</code>，但 <code>defer</code> 只是调整执行时机，浏览器仍然会下载这些文件。要减少首页的依赖，需要把检测工具从公共入口里移出去。</p>
+          <div class="article-table-scroll" role="region" aria-labelledby="script-budget-caption" tabindex="0">
+            <table class="article-table">
+              <caption id="script-budget-caption">首页首次访问：项目脚本的未压缩文件体积</caption>
+              <thead><tr><th scope="col">脚本</th><th scope="col" class="numeric">改动前 / B</th><th scope="col" class="numeric">改动后 / B</th></tr></thead>
+              <tbody>
+                <tr><th scope="row"><code>htmx.min.js</code></th><td class="numeric">52,182</td><td class="numeric">52,182</td></tr>
+                <tr><th scope="row"><code>navigation.js</code></th><td class="numeric">4,050</td><td class="numeric">5,248</td></tr>
+                <tr><th scope="row"><code>ip-check.js</code></th><td class="numeric">8,431</td><td class="numeric">不加载</td></tr>
+                <tr><th scope="row"><code>ipaddr.js</code></th><td class="numeric">38,007</td><td class="numeric">不加载</td></tr>
+                <tr><th scope="row">合计</th><td class="numeric">102,670</td><td class="numeric">57,430</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>导航代码增加了一点，因为它需要负责装载与清理；整体仍减少了 <strong>45,240 字节，约 44.06%</strong>。这里统计的是项目脚本的文件体积，未计入 HTML、CSS、HTTP 压缩和缓存影响。页面打开时间还受网络与执行耗时影响，需要另外测量。</p>
+          <p>现在首页、文章列表和关于页的公共脚本入口只有两行：</p>
+          <figure class="code-block">
+            <figcaption id="shared-entry-caption">公共页面入口</figcaption>
+            <pre tabindex="0" aria-labelledby="shared-entry-caption"><code>&lt;script src="vendor/htmx/htmx.min.js" defer&gt;&lt;/script&gt;
+&lt;script src="navigation.js" defer&gt;&lt;/script&gt;</code></pre>
+          </figure>
+        </section>
+
+        <section class="technical-section" aria-labelledby="module-entry">
+          <h2 id="module-entry">把检测工具变成按需加载的模块</h2>
+          <p>这个博客用 htmx 更新中间正文，页头、导航和页脚一直保留。新页面的 <code>#page-content &gt; main</code> 替换进来后，由 <code>navigation.js</code> 检查正文里有没有 <code>.ip-tool</code>。只有找到工具，才调用动态 <code>import()</code>。</p>
+          <figure class="code-block">
+            <figcaption id="dynamic-import-caption">navigation.js 中的模块入口</figcaption>
+            <pre tabindex="0" aria-labelledby="dynamic-import-caption"><code>const { mountIPCheck } = await import("./ip-check.js");</code></pre>
+          </figure>
+          <p><code>ip-check.js</code> 导出 <code>mountIPCheck(tool)</code>，负责启动当前文章里的检测，并返回一个清理函数。地址解析继续使用已有的 ipaddr.js。原始依赖是面向 CommonJS / 普通脚本的包装，因此用 esbuild 生成浏览器可导入的 ES 模块，产物随站点一起提供。</p>
+          <figure class="code-block">
+            <figcaption id="vendor-build-caption">在项目根目录生成浏览器模块</figcaption>
+            <pre tabindex="0" aria-labelledby="vendor-build-caption"><code>npx --yes esbuild@0.28.2 vendor/ipaddr.js/ipaddr.js --bundle --format=esm --minify --target=es2022 --outfile=vendor/ipaddr.js/ipaddr.mjs</code></pre>
+          </figure>
+          <p>生成的 <code>ipaddr.mjs</code> 为 12,943 字节，版本、命令和校验值记录在 <code>vendor/ipaddr.js/SOURCE.json</code>。IP 文章本身还有一条 <code>modulepreload</code>，让直接访问这篇文章时可以提前获取工具模块；普通页面没有这条预加载。</p>
+          <p>这里要区分两件事：同一文档中，成功加载的同一模块可以复用；每次切页得到的 DOM 却是新的。再次进入 IP 文章时，仍要对新的工具节点调用 <code>mountIPCheck()</code>，不能把上一次的页面实例一并复用。</p>
+        </section>
+
+        <section class="technical-section" aria-labelledby="page-lifecycle">
+          <h2 id="page-lifecycle">处理快速切页和请求清理</h2>
+          <p>假设读者打开 IP 文章，又马上点了“关于”。如果只在 <code>await import()</code> 后初始化工具，模块稍后加载成功时，就可能给已经离开页面的节点启动一组检测。为此，导航层保留一个递增的 <code>mountVersion</code>。</p>
+          <figure class="code-block">
+            <figcaption id="unmount-caption">navigation.js：卸载时让旧版本失效</figcaption>
+            <pre tabindex="0" aria-labelledby="unmount-caption"><code>let mountVersion = 0;
+
+function unmount() {
+  mountVersion += 1;
+  if (disposeIP) disposeIP();
+  disposeIP = null;
+  activeTool = null;
+}</code></pre>
+          </figure>
+          <p>新一轮装载先卸载上一轮，再记住当前版本。等模块返回时，版本仍一致，才允许初始化。下面节选同一次 <code>mount()</code> 调用中与这个判断有关的代码；完整函数还负责导航高亮、焦点和错误提示。</p>
+          <figure class="code-block">
+            <figcaption id="mount-caption">navigation.js：装载的关键路径</figcaption>
+            <pre tabindex="0" aria-labelledby="mount-caption"><code>unmount();
+const version = mountVersion;
+const main = content.querySelector("main");
+activeTool = main.querySelector(".ip-tool");
+
+if (!activeTool) return;
+const tool = activeTool;
+const { mountIPCheck } = await import("./ip-check.js");
+if (version !== mountVersion) return;
+disposeIP = mountIPCheck(tool);</code></pre>
+          </figure>
+          <p>这解决了“等待模块时离开”的情况。<strong>版本检查会阻止过期初始化，但不会取消模块本身的下载。</strong> 另一种情况是工具已经启动，IPv4、IPv6 或网站出口的请求还在路上，此时需要清理工具自己的工作。</p>
+          <p>工具为每次装载创建一个 <code>AbortController</code>，并让每个请求同时受页面生命周期和 8 秒超时约束：</p>
+          <figure class="code-block">
+            <figcaption id="request-caption">ip-check.js：请求使用共同的生命周期信号</figcaption>
+            <pre tabindex="0" aria-labelledby="request-caption"><code>const TIMEOUT_MS = 8000;
+const lifecycle = new AbortController();
+let disposed = false;
+
+async function request(url) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    credentials: "omit",
+    referrerPolicy: "no-referrer",
+    signal: AbortSignal.any([
+      lifecycle.signal,
+      AbortSignal.timeout(TIMEOUT_MS),
+    ]),
+  });
+  if (!response.ok) {
+    throw new Error(`服务返回 HTTP ${response.status}。`);
+  }
+  return response;
+}</code></pre>
+          </figure>
+          <p>返回的清理函数负责标记失效、中止请求和移除刷新按钮的监听器。异步结果回写界面之前也会检查 <code>disposed</code>，防止已经卸载的实例继续更新状态。</p>
+          <figure class="code-block">
+            <figcaption id="dispose-caption">mountIPCheck() 返回的清理函数</figcaption>
+            <pre tabindex="0" aria-labelledby="dispose-caption"><code>return () =&gt; {
+  disposed = true;
+  lifecycle.abort();
+  refresh.removeEventListener("click", run);
+};</code></pre>
+          </figure>
+          <p>这些动作接在 htmx 的页面生命周期上：新正文通过检查、即将替换时卸载旧工具；<code>htmx:afterSwap</code> 后装载新工具；<code>htmx:historyRestore</code> 后重新装载并恢复滚动位置。只有请求开始、页面还没替换时，旧工具继续留在原页面上。</p>
+          <p>模块加载失败也要收尾。当前实现会显示加载错误，停止“准备检测”的状态，并提供“重新加载页面”按钮。错误分支同样检查版本，过期页面的加载失败不会覆盖新页面。刷新由读者点击触发。</p>
+        </section>
+
+        <section class="technical-section" aria-labelledby="verification">
+          <h2 id="verification">把容易漏掉的时序写进验证</h2>
+          <p>手动慢慢点击，很难碰到前面的竞态。现有 Playwright 回归会暂时扣住模块响应或 IP 响应，等页面切走后再观察结果。这次记录对应的 12 项回归全部通过，其中与按需加载直接相关的检查包括：</p>
+          <ul>
+            <li>直接访问首页、文章列表和关于页，不加载 IP 模块，也不请求检测接口。</li>
+            <li>两次进入 IP 文章，模块只请求一次，每次都给当前正文重新初始化工具。</li>
+            <li>模块还没返回就离开，等它加载完成后，也不会启动旧页面的检测。</li>
+            <li>IPv4 请求未完成时离开，请求被中止，依赖它的归属地查询不会继续发出。</li>
+            <li>模块请求失败后有明确提示，解除失败条件并手动重载，可以恢复检测。</li>
+          </ul>
+          <p>在已安装 Playwright 和 Chrome 的环境里，我用下面的命令运行回归。首次配置测试环境的步骤放在项目 README 中。</p>
+          <figure class="code-block">
+            <figcaption id="test-command-caption">PowerShell · 项目根目录</figcaption>
+            <pre tabindex="0" aria-labelledby="test-command-caption"><code>$env:COFFEE_TEST_BROWSER_CHANNEL = 'chrome'
+python -m unittest discover -s tests -v</code></pre>
+          </figure>
+          <p>接口响应由测试控制，因此这些检查验证的是页面行为、错误处理和异步清理。要看真实网络下的等待时间，可以另开浏览器 Network 面板观察；本文的 44% 只对应前面记录的首页脚本体积。</p>
+        </section>
+
+        <section class="article-closing" aria-labelledby="next-tool">
+          <h2 id="next-tool">以后再加工具时</h2>
+          <p>这次留下一个明确的分工：导航层决定哪一轮页面还能装载，具体工具负责自己的请求和事件监听。模块可以缓存，每轮页面实例都要有自己的初始化与清理。下一次增加异步工具时，先把这两个边界接好，再去测实际节省了多少资源。</p>
+        </section>
+
+        <aside class="article-sources" aria-labelledby="implementation-heading">
+          <h2 id="implementation-heading">对应实现</h2>
+          <p>本文记录的是本站 2026-10-09 的一次改动。表格来自改动前后的文件体积；代码段节选自下列实现，完整的错误处理和回归用例也可一并查看。</p>
+          <ul>
+            <li><a href="navigation.js" hx-boost="false" target="_blank" rel="noopener noreferrer">navigation.js</a>：页面切换、版本检查、装载与卸载。</li>
+            <li><a href="ip-check.js" hx-boost="false" target="_blank" rel="noopener noreferrer">ip-check.js</a>：检测请求、生命周期中止与清理函数。</li>
+            <li><a href="tests/test_site.py" hx-boost="false" target="_blank" rel="noopener noreferrer">浏览器回归用例</a> · <a href="README.md" hx-boost="false" target="_blank" rel="noopener noreferrer">运行说明</a> · <a href="vendor/ipaddr.js/SOURCE.json" hx-boost="false" target="_blank" rel="noopener noreferrer">依赖生成记录</a>。</li>
+          </ul>
+        </aside>
+
+        <div class="article-return"><a class="btn" href="posts.html">返回文章列表</a></div>
+      </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2026 咖啡笔记</p>
+  </footer>
+</body>
+</html>
