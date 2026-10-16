@@ -12,6 +12,14 @@ python -m http.server 8001 --bind 127.0.0.1
 
 打开 `http://127.0.0.1:8001/`。首次加载后，站内链接只更新中间正文；页头、导航和页脚保留，正文区域独立滚动。各 `.html` 地址也支持直接访问和刷新。
 
+## GitHub Pages
+
+在线访问：https://xieguu.github.io/coffee-compass/
+
+网站从 `gh-pages` 分支根目录发布，使用 GitHub 原生分支部署，无需安装依赖或构建。`.nojekyll` 禁用 Jekyll 处理，HTML、CSS、JavaScript 和 vendor 文件直接作为静态资源发布。
+
+更新网站时，将需要发布的改动合入 `gh-pages` 并推送到 GitHub，Pages 会自动部署。`main` 保留为开发主分支；只有推送到 `gh-pages` 才会更新线上网站。
+
 ## 页面结构
 
 - `index.html`、`posts.html`、`post-ip.html`、`post-useful-websites.html`、`post-htmx-lazy-loading.html`、`about.html`：完整页面及其正文。
